@@ -17,7 +17,7 @@ mkdir --parent $SCRIPT_DIR/repos/hg
 
 printf "\ncurl --insecure --silent \"$KilnApiBaseUrl/Person?token=$KilnApiToken\"\n"
 KilnUsers=`curl --insecure --silent "$KilnApiBaseUrl/Person?token=$KilnApiToken"`
-printf "KilnUsers | $SCRIPT_DIR/jq '.[] | .sName + " <" + .sEmail + ">"' | sed -e 's/^\"//' -e 's/\"$//'\n"
+printf "KilnUsers | $SCRIPT_DIR/jq '.[] | .sName + \" <\" + .sEmail + \">\"' | sed -e 's/^\"//' -e 's/\"$//'\n"
 echo "$KilnUsers" | $SCRIPT_DIR/jq '.[] | .sName + " <" + .sEmail + ">"' | sed -e 's/^"//' -e 's/"$//' > $SCRIPT_DIR/authors/hg/kiln_active_users.txt
 
 
@@ -34,13 +34,14 @@ do
     printf "\n02. hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template \"{author}\\n\" > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoName}.txt\n"
     hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template "{author}\n" > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoName}.txt
 
-    printf "\n03. rm -rf $SCRIPT_DIR/repos/hg/repoName\n"
-    rm -rf $SCRIPT_DIR/repos/hg/repoName
+    printf "\n03. rm -rf $SCRIPT_DIR/repos/hg/$OldRepoName\n"
+    rm -rf $SCRIPT_DIR/repos/hg/$OldRepoName
 done < $OldNewReposCsv
 IFS=$OIFS
 
 
 
+printf "\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n"
 printf "\n$SCRIPT_DIR/authors/hg/kiln_*.txt | sort | uniq > $SCRIPT_DIR/authors/hg/all_kiln.txt\n"
 cat $SCRIPT_DIR/authors/hg/kiln_*.txt | sort | uniq > $SCRIPT_DIR/authors/hg/all_kiln.txt
 
