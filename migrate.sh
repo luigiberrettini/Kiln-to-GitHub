@@ -50,8 +50,8 @@ do
     printf "\n04. cd $SCRIPT_DIR/repos/git/$NewRepoName\n"
     cd $SCRIPT_DIR/repos/git/$NewRepoName
 
-    printf "\n05. $SCRIPT_DIR/fast-export/hg-fast-export.sh -r $SCRIPT_DIR/repos/hg/$OldRepoName\n"
-    $SCRIPT_DIR/fast-export/hg-fast-export.sh -r $SCRIPT_DIR/repos/hg/$OldRepoName
+    printf "\n05. $SCRIPT_DIR/fast-export/hg-fast-export.sh -r $SCRIPT_DIR/repos/hg/$OldRepoName -A $SCRIPT_DIR/authors/authors_mapping.txt\n"
+    $SCRIPT_DIR/fast-export/hg-fast-export.sh -r $SCRIPT_DIR/repos/hg/$OldRepoName -A $SCRIPT_DIR/authors/authors_mapping.txt
 
     printf "\n06. Checkout and push\n"
     git checkout
@@ -93,5 +93,7 @@ do
     cd ..
 done < $OldNewReposCsv
 IFS=$OIFS
+
+
 
 printf "\n"
