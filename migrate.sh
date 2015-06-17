@@ -41,23 +41,29 @@ do
     printf "\n01. hg clone ${OldRepoUrl} $SCRIPT_DIR/repos/hg/$OldRepoName\n"
     hg clone ${OldRepoUrl} $SCRIPT_DIR/repos/hg/$OldRepoName
 
-    printf "\n02. curl --silent --user \"$GitHubUser:$GitHubToken\" \"https://api.github.com/orgs/$GitHubOrg/repos\" --request POST --data \"{\\\"name\\\": \\\"$NewRepoName\\\", \\\"private\\\": true, \\\"team_id\\\": $GitHubTeamId}\"\n"
+    printf "\n02. $SCRIPT_DIR/ok.sh org_repos $GitHubOrg _filter='.[] | select(.fork==false) | .name' | grep $NewRepoName | wc -l\n"
+    NewRepoNeedsSuffix=$SCRIPT_DIR/ok.sh org_repos $GitHubOrg _filter='.[] | select(.fork==false) | .name | grep $NewRepoName | wc -l'
+
+    printf "\n03. if [ $NewRepoNeedsSuffix -ne 0 ]; then NewRepoSuffix=$(uuidgen -r); NewRepoName=\"${NewRepoName}_${NewRepoSuffix}\"; fi\n"
+    if [ $NewRepoNeedsSuffix -ne 0 ]; then NewRepoSuffix=$(uuidgen -r); NewRepoName="${NewRepoName}_${NewRepoSuffix}"; fi
+
+    printf "\n04. curl --silent --user \"$GitHubUser:$GitHubToken\" \"https://api.github.com/orgs/$GitHubOrg/repos\" --request POST --data \"{\\\"name\\\": \\\"$NewRepoName\\\", \\\"private\\\": true, \\\"team_id\\\": $GitHubTeamId}\"\n"
     curl --silent --user "$GitHubUser:$GitHubToken" "https://api.github.com/orgs/$GitHubOrg/repos" --request POST --data "{\"name\": \"$NewRepoName\", \"private\": true, \"team_id\": $GitHubTeamId}" > /dev/null
 
-    printf "\n03. git clone \"https://$GitHubUser:$GitHubToken@github.com/$GitHubOrg/${NewRepoName}.git\" $SCRIPT_DIR/repos/git/$NewRepoName\n"
+    printf "\n05. git clone \"https://$GitHubUser:$GitHubToken@github.com/$GitHubOrg/${NewRepoName}.git\" $SCRIPT_DIR/repos/git/$NewRepoName\n"
     git clone "https://$GitHubUser:$GitHubToken@github.com/$GitHubOrg/${NewRepoName}.git" $SCRIPT_DIR/repos/git/$NewRepoName
 
-    printf "\n04. cd $SCRIPT_DIR/repos/git/$NewRepoName\n"
+    printf "\n06. cd $SCRIPT_DIR/repos/git/$NewRepoName\n"
     cd $SCRIPT_DIR/repos/git/$NewRepoName
 
-    printf "\n05. $SCRIPT_DIR/fast-export/hg-fast-export.sh -r $SCRIPT_DIR/repos/hg/$OldRepoName -A $SCRIPT_DIR/authors/authors_mapping.txt\n"
+    printf "\n07. $SCRIPT_DIR/fast-export/hg-fast-export.sh -r $SCRIPT_DIR/repos/hg/$OldRepoName -A $SCRIPT_DIR/authors/authors_mapping.txt\n"
     $SCRIPT_DIR/fast-export/hg-fast-export.sh -r $SCRIPT_DIR/repos/hg/$OldRepoName -A $SCRIPT_DIR/authors/authors_mapping.txt
 
-    printf "\n06. Checkout and push\n"
+    printf "\n08. Checkout and push\n"
     git checkout
     git push --all origin
 
-    printf "\n07. .gitignore\n"
+    printf "\n09. .gitignore\n"
     if [ -f .hgignore ]; then
         printf "    mv .hgignore .gitignore, add, commit and push\n"
         mv .hgignore .gitignore
@@ -68,7 +74,7 @@ do
         printf "    Please download and commit the gitignore related to your repo language from http://github.com/github/gitignore\n"
     fi
 
-    printf "\n08. OldRepoNewRepoGroupIx\n"
+    printf "\n10. OldRepoNewRepoGroupIx\n"
     printf "    curl --insecure --silent \"$KilnApiBaseUrl/Project/$OldRepoPrjIx?token=$KilnApiToken\"\n"
     OldRepoPrjJson=`curl --insecure --silent "$KilnApiBaseUrl/Project/$OldRepoPrjIx?token=$KilnApiToken"`
     printf "    OldRepoPrjJson | $SCRIPT_DIR/jq \".repoGroups[] | select(.sSlug==\\\"${OldRepoGrpName}_MigratedToGitHub\\\") | .ixRepoGroup\"\n"
@@ -86,10 +92,10 @@ do
         fi
     fi
 
-    printf "\n09. curl --insecure --silent \"$KilnApiBaseUrl/Repo/$OldRepoIx\" --request POST --data \"ixRepoGroup=$OldRepoNewRepoGroupIx&token=$KilnApiToken\"\n"
+    printf "\n11. curl --insecure --silent \"$KilnApiBaseUrl/Repo/$OldRepoIx\" --request POST --data \"ixRepoGroup=$OldRepoNewRepoGroupIx&token=$KilnApiToken\"\n"
     curl --insecure --silent "$KilnApiBaseUrl/Repo/$OldRepoIx" --request POST --data "ixRepoGroup=$OldRepoNewRepoGroupIx&token=$KilnApiToken" > /dev/null
 
-    printf "\n10. cd ..\n"
+    printf "\n12. cd ..\n"
     cd ..
 done < $OldNewReposCsv
 IFS=$OIFS

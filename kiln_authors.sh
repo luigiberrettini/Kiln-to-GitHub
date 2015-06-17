@@ -31,10 +31,13 @@ do
     printf "\n01. hg clone ${OldRepoUrl} $SCRIPT_DIR/repos/hg/$OldRepoName\n"
     hg clone ${OldRepoUrl} $SCRIPT_DIR/repos/hg/$OldRepoName
 
-    printf "\n02. hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template \"{author}\\n\" > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoName}.txt\n"
-    hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template "{author}\n" > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoName}.txt
+    printf "\n02. uuidgen -r\n"
+    UUID=$(uuidgen -r)
 
-    printf "\n03. rm -rf $SCRIPT_DIR/repos/hg/$OldRepoName\n"
+    printf "\n03. hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template \"{author}\\\\n\" > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoName}_${UUID}.txt\n"
+    hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template "{author}\n" > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoName}_${UUID}.txt
+
+    printf "\n04. rm -rf $SCRIPT_DIR/repos/hg/$OldRepoName\n"
     rm -rf $SCRIPT_DIR/repos/hg/$OldRepoName
 done < $OldNewReposCsv
 IFS=$OIFS
