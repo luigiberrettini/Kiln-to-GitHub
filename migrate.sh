@@ -21,9 +21,17 @@ fi
 
 
 
-if [ ! -d ./fast-export ]; then
-    printf "\ngit clone https://github.com/frej/fast-export.git\n"
-    git clone https://github.com/frej/fast-export.git $SCRIPT_DIR/fast-export
+#if [ ! -d $SCRIPT_DIR/fast-export ]; then
+#    printf "\ngit clone https://github.com/frej/fast-export.git\n"
+#    git clone https://github.com/frej/fast-export.git $SCRIPT_DIR/fast-export
+#fi
+
+if [ ! -d $SCRIPT_DIR/fast-export ]; then
+    printf "\ngit clone https://github.com/daolis/fast-export.git\n"
+    git clone https://github.com/daolis/fast-export $SCRIPT_DIR/fast-export
+
+    printf "\npip install -r requirements-submodules.txt\n"
+    pip install -r requirements-submodules.txt
 fi
 
 printf "\nCreating repos/hg and repos/git folders\n"
@@ -38,8 +46,8 @@ while read OldRepoUrl OldRepoPrjIx OldRepoGrpIx OldRepoIx OldRepoPrjName OldRepo
 do
     printf "\n********************\n"
 
-    printf "\n01. hg clone ${OldRepoUrl} $SCRIPT_DIR/repos/hg/$OldRepoName\n"
-    hg clone ${OldRepoUrl} $SCRIPT_DIR/repos/hg/$OldRepoName
+    printf "\n01. hg clone --uncompressed ${OldRepoUrl} $SCRIPT_DIR/repos/hg/$OldRepoName\n"
+    hg clone --uncompressed ${OldRepoUrl} $SCRIPT_DIR/repos/hg/$OldRepoName
 
     printf "\n02. $SCRIPT_DIR/ok.sh org_repos $GitHubOrg _filter='.[] | select(.fork==false) | .name' | grep $NewRepoName | wc -l\n"
     NewRepoNeedsSuffix=$SCRIPT_DIR/ok.sh org_repos $GitHubOrg _filter='.[] | select(.fork==false) | .name | grep $NewRepoName | wc -l'
@@ -59,11 +67,20 @@ do
     printf "\n07. $SCRIPT_DIR/fast-export/hg-fast-export.sh -r $SCRIPT_DIR/repos/hg/$OldRepoName -A $SCRIPT_DIR/authors/authors_mapping.txt\n"
     $SCRIPT_DIR/fast-export/hg-fast-export.sh -r $SCRIPT_DIR/repos/hg/$OldRepoName -A $SCRIPT_DIR/authors/authors_mapping.txt
 
-    printf "\n08. Checkout and push\n"
-    git checkout
+    if [ -f $SCRIPT_DIR/repos/hg/$OldRepoName/.hgsub ]; then
+        printf "\n08. Checkout and submodule init and update\n"
+        git checkout
+        git submodule init
+        git submodule update
+    else
+        printf "\n08. Checkout\n"
+        git checkout
+    fi
+
+    printf "\n09. git push --all origin\n"
     git push --all origin
 
-    printf "\n09. .gitignore\n"
+    printf "\n10. .gitignore\n"
     if [ -f .hgignore ]; then
         printf "    mv .hgignore .gitignore, add, commit and push\n"
         mv .hgignore .gitignore
@@ -74,7 +91,7 @@ do
         printf "    Please download and commit the gitignore related to your repo language from http://github.com/github/gitignore\n"
     fi
 
-    printf "\n10. OldRepoNewRepoGroupIx\n"
+    printf "\n11. OldRepoNewRepoGroupIx\n"
     printf "    curl --insecure --silent \"$KilnApiBaseUrl/Project/$OldRepoPrjIx?token=$KilnApiToken\"\n"
     OldRepoPrjJson=`curl --insecure --silent "$KilnApiBaseUrl/Project/$OldRepoPrjIx?token=$KilnApiToken"`
     printf "    OldRepoPrjJson | $SCRIPT_DIR/jq \".repoGroups[] | select(.sSlug==\\\"${OldRepoGrpName}_MigratedToGitHub\\\") | .ixRepoGroup\"\n"
@@ -92,10 +109,10 @@ do
         fi
     fi
 
-    printf "\n11. curl --insecure --silent \"$KilnApiBaseUrl/Repo/$OldRepoIx\" --request POST --data \"ixRepoGroup=$OldRepoNewRepoGroupIx&token=$KilnApiToken\"\n"
+    printf "\n12. curl --insecure --silent \"$KilnApiBaseUrl/Repo/$OldRepoIx\" --request POST --data \"ixRepoGroup=$OldRepoNewRepoGroupIx&token=$KilnApiToken\"\n"
     curl --insecure --silent "$KilnApiBaseUrl/Repo/$OldRepoIx" --request POST --data "ixRepoGroup=$OldRepoNewRepoGroupIx&token=$KilnApiToken" > /dev/null
 
-    printf "\n12. cd ..\n"
+    printf "\n13. cd ..\n"
     cd ..
 done < $OldNewReposCsv
 IFS=$OIFS

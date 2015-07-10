@@ -12,8 +12,9 @@ KilnApiToken=$6
 
 
 printf "\nCreating authors and repos/hg folders\n"
-mkdir --parent $SCRIPT_DIR/authors/hg
 mkdir --parent $SCRIPT_DIR/repos/hg
+mkdir --parent $SCRIPT_DIR/authors/hg
+mkdir --parent $SCRIPT_DIR/subs/hg
 
 printf "\ncurl --insecure --silent \"$KilnApiBaseUrl/Person?token=$KilnApiToken\"\n"
 KilnUsers=`curl --insecure --silent "$KilnApiBaseUrl/Person?token=$KilnApiToken"`
@@ -28,16 +29,24 @@ while read OldRepoUrl OldRepoPrjIx OldRepoGrpIx OldRepoIx OldRepoPrjName OldRepo
 do
     printf "\n********************\n"
 
-    printf "\n01. hg clone ${OldRepoUrl} $SCRIPT_DIR/repos/hg/$OldRepoName\n"
-    hg clone ${OldRepoUrl} $SCRIPT_DIR/repos/hg/$OldRepoName
+    printf "\n01. hg clone --uncompressed ${OldRepoUrl} $SCRIPT_DIR/repos/hg/$OldRepoName\n"
+    hg clone --uncompressed ${OldRepoUrl} $SCRIPT_DIR/repos/hg/$OldRepoName
 
     printf "\n02. uuidgen -r\n"
     UUID=$(uuidgen -r)
-
+    
     printf "\n03. hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template \"{author}\\\\n\" | sort | uniq > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoName}_${UUID}.txt\n"
-    hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template "{author}\n" | sort | uniq > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoName}_${UUID}.txt
+    hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template "{author}\n" | sort | uniq > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}_${UUID}.txt
 
-    printf "\n04. rm -rf $SCRIPT_DIR/repos/hg/$OldRepoName\n"
+    printf "\n04. $SCRIPT_DIR/repos/hg/$OldRepoName/.hgsub "
+    if [ -f $SCRIPT_DIR/repos/hg/$OldRepoName/.hgsub ]; then
+        printf "being copied to $SCRIPT_DIR/subs/hg/kiln_subrepos_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}_${UUID}.txt\n"
+        cp $SCRIPT_DIR/repos/hg/$OldRepoName/.hgsub $SCRIPT_DIR/subs/hg/kiln_subrepos_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}_${UUID}.txt
+    else
+        printf "does not exist\n"
+    fi
+
+    printf "\n05. rm -rf $SCRIPT_DIR/repos/hg/$OldRepoName\n"
     rm -rf $SCRIPT_DIR/repos/hg/$OldRepoName
 done < $OldNewReposCsv
 IFS=$OIFS
