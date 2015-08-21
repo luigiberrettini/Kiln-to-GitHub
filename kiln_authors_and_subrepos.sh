@@ -32,21 +32,18 @@ do
     printf "\n01. hg clone --uncompressed ${OldRepoUrl} $SCRIPT_DIR/repos/hg/$OldRepoName\n"
     hg clone --uncompressed ${OldRepoUrl} $SCRIPT_DIR/repos/hg/$OldRepoName
 
-    printf "\n02. uuidgen -r\n"
-    UUID=$(uuidgen -r)
-    
-    printf "\n03. hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template \"{author}\\\\n\" | sort | uniq > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoName}_${UUID}.txt\n"
-    hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template "{author}\n" | sort | uniq > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}_${UUID}.txt
+    printf "\n02. hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template \"{author}\\\\n\" | sort | uniq > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt\n"
+    hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template "{author}\n" | sort | uniq > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt
 
-    printf "\n04. $SCRIPT_DIR/repos/hg/$OldRepoName/.hgsub "
+    printf "\n03. $SCRIPT_DIR/repos/hg/$OldRepoName/.hgsub "
     if [ -f $SCRIPT_DIR/repos/hg/$OldRepoName/.hgsub ]; then
-        printf "being copied to $SCRIPT_DIR/subs/hg/kiln_subrepos_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}_${UUID}.txt\n"
-        cp $SCRIPT_DIR/repos/hg/$OldRepoName/.hgsub $SCRIPT_DIR/subs/hg/kiln_subrepos_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}_${UUID}.txt
+        printf "being copied to $SCRIPT_DIR/subs/hg/kiln_subrepos_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt\n"
+        cp $SCRIPT_DIR/repos/hg/$OldRepoName/.hgsub $SCRIPT_DIR/subs/hg/kiln_subrepos_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt
     else
         printf "does not exist\n"
     fi
 
-    printf "\n05. rm -rf $SCRIPT_DIR/repos/hg/$OldRepoName\n"
+    printf "\n04. rm -rf $SCRIPT_DIR/repos/hg/$OldRepoName\n"
     rm -rf $SCRIPT_DIR/repos/hg/$OldRepoName
 done < $OldNewReposCsv
 IFS=$OIFS
