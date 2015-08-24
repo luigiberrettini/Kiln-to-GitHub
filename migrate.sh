@@ -12,6 +12,22 @@ KilnApiToken=$7
 
 
 
+printf "\nLine endings: "
+CarriageReturns=`grep -r $'\r' $OldNewReposCsv | wc -l`
+if [ $CarriageReturns -gt 0 ]; then
+    echo 'Windows (FATAL ERROR)'
+    exit 1
+else
+    echo 'Unix (OK)'
+fi
+
+
+
+printf "\nFix trailing new line\n"
+tail -c1 $OldNewReposCsv | read -r _ || echo >> $OldNewReposCsv
+
+
+
 printf "\ncurl --silent --user \"$GitHubUser:$GitHubToken\" \"https://api.github.com/orgs/$GitHubOrg/teams\" | $SCRIPT_DIR/jq \".[] | select(.name==\\\"$GitHubTeamName\\\") | .id\"\n"
 GitHubTeamId=`curl --silent --user "$GitHubUser:$GitHubToken" "https://api.github.com/orgs/$GitHubOrg/teams" | $SCRIPT_DIR/jq ".[] | select(.name==\"$GitHubTeamName\") | .id"`
 if [ ! $GitHubTeamId ]; then
