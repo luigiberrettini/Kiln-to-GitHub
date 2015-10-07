@@ -29,6 +29,7 @@ tail -c1 $OldNewReposCsv | read -r _ || echo >> $OldNewReposCsv
 
 printf "\nCreating authors and repos/hg folders\n"
 mkdir --parent $SCRIPT_DIR/repos/hg
+mkdir --parent $SCRIPT_DIR/filenames/hg
 mkdir --parent $SCRIPT_DIR/authors/hg
 mkdir --parent $SCRIPT_DIR/authors/last-migration
 mkdir --parent $SCRIPT_DIR/subs/hg
@@ -51,13 +52,16 @@ do
     printf "\n01. hg clone --uncompressed ${OldRepoUrl} $SCRIPT_DIR/repos/hg/$OldRepoName\n"
     hg clone --uncompressed ${OldRepoUrl} $SCRIPT_DIR/repos/hg/$OldRepoName
 
-    printf "\n02. hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template \"{author}\\\\n\" | sort | uniq > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt\n"
+    printf "\n02. hg log $SCRIPT_DIR/repos/hg/$OldRepoName --style $SCRIPT_DIR/kiln_filenames_hg_log_style | sort | uniq > $SCRIPT_DIR/filenames/hg/kiln_filenames_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt\n"
+    hg log $SCRIPT_DIR/repos/hg/$OldRepoName --style $SCRIPT_DIR/kiln_filenames_hg_log_style | sort | uniq > $SCRIPT_DIR/filenames/hg/kiln_filenames_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt
+    
+    printf "\n03. hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template \"{author}\\\\n\" | sort | uniq > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt\n"
     hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template "{author}\n" | sort | uniq > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt
 
-    printf "\n03. cp $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt $SCRIPT_DIR/authors/last-migration\n"
+    printf "\n04. cp $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt $SCRIPT_DIR/authors/last-migration\n"
     cp $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt $SCRIPT_DIR/authors/last-migration
 
-    printf "\n04. $SCRIPT_DIR/repos/hg/$OldRepoName/.hgsub "
+    printf "\n05. $SCRIPT_DIR/repos/hg/$OldRepoName/.hgsub "
     if [ -f $SCRIPT_DIR/repos/hg/$OldRepoName/.hgsub ]; then
         printf "being copied to $SCRIPT_DIR/subs/hg/kiln_subrepos_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt\n"
         cp $SCRIPT_DIR/repos/hg/$OldRepoName/.hgsub $SCRIPT_DIR/subs/hg/kiln_subrepos_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt
@@ -65,7 +69,7 @@ do
         printf "does not exist\n"
     fi
 
-    printf "\n05. rm -rf $SCRIPT_DIR/repos/hg/$OldRepoName\n"
+    printf "\n06. rm -rf $SCRIPT_DIR/repos/hg/$OldRepoName\n"
     rm -rf $SCRIPT_DIR/repos/hg/$OldRepoName
 done < $OldNewReposCsv
 IFS=$OIFS
@@ -73,10 +77,13 @@ IFS=$OIFS
 
 
 printf "\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n"
+printf "\n$SCRIPT_DIR/filenames/hg/kiln_*.txt | sort | uniq > $SCRIPT_DIR/filenames/hg/all_kiln.txt\n"
+cat $SCRIPT_DIR/filenames/hg/kiln_*.txt | sort | uniq > $SCRIPT_DIR/filenames/hg/all_kiln.txt
+
 printf "\n$SCRIPT_DIR/authors/hg/kiln_*.txt | sort | uniq > $SCRIPT_DIR/authors/hg/all_kiln.txt\n"
 cat $SCRIPT_DIR/authors/hg/kiln_*.txt | sort | uniq > $SCRIPT_DIR/authors/hg/all_kiln.txt
 
-printf "\n$SCRIPT_DIR/authors/hg/kiln_*.txt | sort | uniq > $SCRIPT_DIR/authors/hg/all_kiln.txt\n"
+printf "\n$SCRIPT_DIR/authors/last-migration/kiln_*.txt | sort | uniq > $SCRIPT_DIR/authors/all_last-migration.txt\n"
 cat $SCRIPT_DIR/authors/last-migration/kiln_*.txt | sort | uniq > $SCRIPT_DIR/authors/all_last-migration.txt
 
 printf "\nrm -rf $SCRIPT_DIR/authors/last-migration\n"
