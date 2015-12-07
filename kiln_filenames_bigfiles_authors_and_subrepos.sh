@@ -56,13 +56,30 @@ do
     printf "\n02. hg log $SCRIPT_DIR/repos/hg/$OldRepoName --style $SCRIPT_DIR/kiln_filenames_hg_log_style | sort | uniq > $SCRIPT_DIR/filenames/hg/kiln_filenames_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt\n"
     hg log $SCRIPT_DIR/repos/hg/$OldRepoName --style $SCRIPT_DIR/kiln_filenames_hg_log_style | sort | uniq > $SCRIPT_DIR/filenames/hg/kiln_filenames_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt
 
-    printf "\n03. hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template \"{author}\\\\n\" | sort | uniq > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt\n"
+    printf "\n03. cd $SCRIPT_DIR/repos/hg/$OldRepoName\n"
+    cd $SCRIPT_DIR/repos/hg/$OldRepoName
+
+    # REALLY REALLY SLOW
+    printf "\n04. for rev in \`seq 0 \$(hg tip --template '{rev'})\`; do printf \"${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName} - Revision \$rev\\\n\$(hg files -v \"set:size('>5MB')\" -r \$rev)\\\n\\\n\"; done > $SCRIPT_DIR/bigfiles/hg/kiln_bigfiles_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt\n"
+    latestRev=`hg tip --template '{rev}'`
+    for ((currRev=0; currRev<=$latestRev; currRev++))
+    do
+        bigFiles=`hg files -v -r $currRev "set:size('>5MB')"`
+        if [ ! -z "$bigFiles" ]; then
+            printf "${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName} - Revision $currRev\n$bigFiles\n\n"
+        fi
+    done > $SCRIPT_DIR/bigfiles/hg/kiln_bigfiles_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt
+
+    printf "\n05. cd $SCRIPT_DIR\n"
+    cd $SCRIPT_DIR
+
+    printf "\n06. hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template \"{author}\\\\n\" | sort | uniq > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt\n"
     hg log $SCRIPT_DIR/repos/hg/$OldRepoName --template "{author}\n" | sort | uniq > $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt
 
-    printf "\n04. cp $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt $SCRIPT_DIR/authors/last-migration\n"
+    printf "\n07. cp $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt $SCRIPT_DIR/authors/last-migration\n"
     cp $SCRIPT_DIR/authors/hg/kiln_authors_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt $SCRIPT_DIR/authors/last-migration
 
-    printf "\n05. $SCRIPT_DIR/repos/hg/$OldRepoName/.hgsub "
+    printf "\n08. $SCRIPT_DIR/repos/hg/$OldRepoName/.hgsub "
     if [ -f $SCRIPT_DIR/repos/hg/$OldRepoName/.hgsub ]; then
         printf "being copied to $SCRIPT_DIR/subs/hg/kiln_subrepos_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt\n"
         cp $SCRIPT_DIR/repos/hg/$OldRepoName/.hgsub $SCRIPT_DIR/subs/hg/kiln_subrepos_${OldRepoPrjName}_${OldRepoGrpName}_${OldRepoName}.txt
@@ -70,7 +87,7 @@ do
         printf "does not exist\n"
     fi
 
-    printf "\n06. rm -rf $SCRIPT_DIR/repos/hg/$OldRepoName\n"
+    printf "\n09. rm -rf $SCRIPT_DIR/repos/hg/$OldRepoName\n"
     rm -rf $SCRIPT_DIR/repos/hg/$OldRepoName
 done < $OldNewReposCsv
 IFS=$OIFS

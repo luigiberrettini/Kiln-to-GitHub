@@ -9,6 +9,10 @@ GitHubToken=$4
 GitHubTeamName=$5
 KilnApiBaseUrl=$6
 KilnApiToken=$7
+UseBFG=$8
+BFG_ExtensionsToLFS=$9
+BFG_FoldersToDelete=$10
+BFG_FilesToDelete=$11
 
 
 
@@ -136,18 +140,25 @@ do
     printf "\n11. curl --silent --user \"$GitHubUser:$GitHubToken\" \"https://api.github.com/orgs/$GitHubOrg/repos\" --request POST --data '{\"name\": \"$NewRepoName\", \"private\": true, \"team_id\": $GitHubTeamId}'\n"
     curl --silent --user "$GitHubUser:$GitHubToken" "https://api.github.com/orgs/$GitHubOrg/repos" --request POST --data "{\"name\": \"$NewRepoName\", \"private\": true, \"team_id\": $GitHubTeamId}" > /dev/null
 
-    printf "\n12. git remote add origin \"https://$GitHubUser:$GitHubToken@github.com/$GitHubOrg/${NewRepoName}.git\"\n    git remote -v\n"
-    git remote add origin "https://$GitHubUser:$GitHubToken@github.com/$GitHubOrg/${NewRepoName}.git"
-    git remote -v
-
-    printf "\n13. git push --all origin\n"
-    git push --all origin
+    printf "\n12. curl -H \"Accept: application/vnd.github.ironman-preview+json\" --silent --user \"$GitHubUser:$GitHubToken\" \"https://api.github.com/teams/$GitHubTeamId/repos/YTech/$NewRepoName\" --request PUT --data '{\"permission\": \"admin\"}'\n"
+    curl -H "Accept: application/vnd.github.ironman-preview+json" --silent --user "$GitHubUser:$GitHubToken" "https://api.github.com/teams/$GitHubTeamId/repos/YTech/$NewRepoName" --request PUT --data "{\"permission\": \"admin\"}" > /dev/null
+    
+    RemoteOrigin="https://$GitHubUser:$GitHubToken@github.com/$GitHubOrg/${NewRepoName}.git"
+    if [ -z "$UseBFG" ]; then
+        printf "\n13. Migrating binaries to LFS with BFG repo cleaner\n"
+        $SCRIPT_DIR/move_large_files_and_apply_ignore.sh $NewRepoName $BFG_ExtensionsToLFS $BFG_FoldersToDelete $BFG_FilesToDelete $RemoteOrigin
+    else
+        printf "\n13. git remote add origin \"$RemoteOrigin\"\n    git remote -v\n    git push --all origin\n"
+        git remote add origin "$RemoteOrigin"
+        git remote -v
+        git push --all origin
+    fi
 
     printf "\n14. OldRepoNewRepoGroupIx\n"
     printf "    curl --insecure --silent \"$KilnApiBaseUrl/Project/$OldRepoPrjIx?token=$KilnApiToken\"\n"
     OldRepoPrjJson=`curl --insecure --silent "$KilnApiBaseUrl/Project/$OldRepoPrjIx?token=$KilnApiToken"`
-    printf "    OldRepoPrjJson | $SCRIPT_DIR/jq \".repoGroups[] | select(.sSlug==\\\"${OldRepoGrpName}_MigratedToGitHub\\\") | .ixRepoGroup\"\n"
-    OldRepoNewRepoGroupIx=`echo "$OldRepoPrjJson" | $SCRIPT_DIR/jq ".repoGroups[] | select(.sSlug==\"${OldRepoGrpName}_MigratedToGitHub\") | .ixRepoGroup"`
+    printf "    OldRepoPrjJson | $SCRIPT_DIR/jq \".repoGroups[] | select(.sName==\\\"${OldRepoGrpName}_MigratedToGitHub\\\") | .ixRepoGroup\"\n"
+    OldRepoNewRepoGroupIx=`echo "$OldRepoPrjJson" | $SCRIPT_DIR/jq ".repoGroups[] | select(.sName==\"${OldRepoGrpName}_MigratedToGitHub\") | .ixRepoGroup"`
     if [ -z "$OldRepoNewRepoGroupIx" ]; then
         printf "    curl --insecure --silent \"$KilnApiBaseUrl/RepoGroup/Create\" --request POST --data \"ixProject=$OldRepoPrjIx&sName=${OldRepoGrpName}_MigratedToGitHub&token=$KilnApiToken\"\n"
         OldRepoNewRepoGroupData=`curl --insecure --silent "$KilnApiBaseUrl/RepoGroup/Create" --request POST --data "ixProject=$OldRepoPrjIx&sName=${OldRepoGrpName}_MigratedToGitHub&token=$KilnApiToken"`
@@ -164,8 +175,8 @@ do
     printf "\n15. curl --insecure --silent \"$KilnApiBaseUrl/Repo/$OldRepoIx\" --request POST --data \"ixRepoGroup=$OldRepoNewRepoGroupIx&token=$KilnApiToken\"\n"
     curl --insecure --silent "$KilnApiBaseUrl/Repo/$OldRepoIx" --request POST --data "ixRepoGroup=$OldRepoNewRepoGroupIx&token=$KilnApiToken" > /dev/null
 
-    printf "\n16. cd ..\n"
-    cd ..
+    printf "\n16. cd $SCRIPT_DIR\n"
+    cd $SCRIPT_DIR
 done < $OldNewReposCsv
 IFS=$OIFS
 
