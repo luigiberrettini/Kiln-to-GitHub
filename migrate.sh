@@ -32,22 +32,23 @@ tail -c1 $OldNewReposCsv | read -r _ || echo >> $OldNewReposCsv
 
 
 
-printf "\ncurl --silent --user \"$GitHubUser:$GitHubToken\" \"https://api.github.com/orgs/$GitHubOrg/teams\" | $SCRIPT_DIR/jq \".[] | select(.name==\\\"$GitHubTeamName\\\") | .id\"\n"
-GitHubTeamId=`curl --silent --user "$GitHubUser:$GitHubToken" "https://api.github.com/orgs/$GitHubOrg/teams" | $SCRIPT_DIR/jq ".[] | select(.name==\"$GitHubTeamName\") | .id"`
-if [ ! $GitHubTeamId ]; then
-    printf "Invalid user and/or password\n"
-    exit 1
-fi
-
-
-
 # OK SETUP
 echo 'machine api.github.com' > ~/.netrc
 echo "    login $GitHubUser" >> ~/.netrc
 echo "    password $GitHubToken" >> ~/.netrc
 export OK_SH_URL=https://api.github.com
 export OK_SH_ACCEPT=application/vnd.github.v3+json
-export OK_SH_JQ_BIN="$SCRIPT_DIR/jq"
+export OK_SH_JQ_BIN="./jq"
+
+
+
+printf "\n$SCRIPT_DIR/ok.sh org_teams $GitHubOrg _filter='.[] | select(.name==\"$GitHubTeamName\") | .id'\n"
+GitHubTeamId=`$SCRIPT_DIR/ok.sh org_teams $GitHubOrg _filter='.[] | select(.name=="'$GitHubTeamName'") | .id'`
+printf "GitHubTeamId: $GitHubTeamId"
+if [ ! $GitHubTeamId ]; then
+    printf "Invalid user and/or password\n"
+    exit 1
+fi
 
 
 
@@ -105,7 +106,7 @@ do
     git init
 
     printf "\n07. $SCRIPT_DIR/fast-export/hg-fast-export.sh -r $SCRIPT_DIR/repos/hg/$OldRepoName -A $SCRIPT_DIR/authors/authors_mapping.txt\n"
-    $SCRIPT_DIR/fast-export/hg-fast-export.sh -r $SCRIPT_DIR/repos/hg/$OldRepoName -A $SCRIPT_DIR/authors/authors_mapping.txt
+    $SCRIPT_DIR/fast-export/hg-fast-export.sh -r $SCRIPT_DIR/repos/hg/$OldRepoName -A $SCRIPT_DIR/authors/authors_mapping.txt --fix-branchnames
 
     if [ -f $SCRIPT_DIR/repos/hg/$OldRepoName/.hgsub ]; then
         printf "\n08. Checkout and submodule init and update\n"
@@ -144,7 +145,7 @@ do
     curl -H "Accept: application/vnd.github.ironman-preview+json" --silent --user "$GitHubUser:$GitHubToken" "https://api.github.com/teams/$GitHubTeamId/repos/YTech/$NewRepoName" --request PUT --data "{\"permission\": \"admin\"}" > /dev/null
     
     RemoteOrigin="https://$GitHubUser:$GitHubToken@github.com/$GitHubOrg/${NewRepoName}.git"
-    if [ -z "$UseBFG" ]; then
+    if [ $UseBFG -eq 1 ]; then
         printf "\n13. Migrating binaries to LFS with BFG repo cleaner\n"
         $SCRIPT_DIR/move_large_files_and_apply_ignore.sh $NewRepoName $BFG_ExtensionsToLFS $BFG_FoldersToDelete $BFG_FilesToDelete $RemoteOrigin
     else
