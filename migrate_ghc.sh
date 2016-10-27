@@ -141,8 +141,8 @@ do
     printf "\n11. curl --silent --user \"$GitHubUser:$GitHubToken\" \"https://api.github.com/orgs/$GitHubOrg/repos\" --request POST --data '{\"name\": \"$NewRepoName\", \"private\": true, \"team_id\": $GitHubTeamId}'\n"
     curl --silent --user "$GitHubUser:$GitHubToken" "https://api.github.com/orgs/$GitHubOrg/repos" --request POST --data "{\"name\": \"$NewRepoName\", \"private\": true, \"team_id\": $GitHubTeamId}" > /dev/null
 
-    printf "\n12. curl -H \"Accept: application/vnd.github.ironman-preview+json\" --silent --user \"$GitHubUser:$GitHubToken\" \"https://api.github.com/teams/$GitHubTeamId/repos/YTech/$NewRepoName\" --request PUT --data '{\"permission\": \"admin\"}'\n"
-    curl -H "Accept: application/vnd.github.ironman-preview+json" --silent --user "$GitHubUser:$GitHubToken" "https://api.github.com/teams/$GitHubTeamId/repos/YTech/$NewRepoName" --request PUT --data "{\"permission\": \"admin\"}" > /dev/null
+    printf "\n12. curl -H \"Accept: $OK_SH_ACCEPT\" --silent --user \"$GitHubUser:$GitHubToken\" \"https://api.github.com/teams/$GitHubTeamId/repos/YTech/$NewRepoName\" --request PUT --data '{\"permission\": \"admin\"}'\n"
+    curl -H "Accept: $OK_SH_ACCEPT" --silent --user "$GitHubUser:$GitHubToken" "https://api.github.com/teams/$GitHubTeamId/repos/YTech/$NewRepoName" --request PUT --data "{\"permission\": \"admin\"}" > /dev/null
     
     RemoteOrigin="https://$GitHubUser:$GitHubToken@github.com/$GitHubOrg/${NewRepoName}.git"
     if [ $UseBFG -eq 1 ]; then
