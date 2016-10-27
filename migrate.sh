@@ -11,8 +11,8 @@ KilnApiBaseUrl=$6
 KilnApiToken=$7
 UseBFG=$8
 BFG_ExtensionsToLFS=$9
-BFG_FoldersToDelete=$10
-BFG_FilesToDelete=$11
+BFG_FoldersToDelete=${10}
+BFG_FilesToDelete=${11}
 
 
 
@@ -46,7 +46,7 @@ printf "\n$SCRIPT_DIR/ok.sh org_teams $GitHubOrg _filter='.[] | select(.name==\"
 GitHubTeamId=`$SCRIPT_DIR/ok.sh org_teams $GitHubOrg _filter='.[] | select(.name=="'$GitHubTeamName'") | .id'`
 printf "GitHubTeamId: $GitHubTeamId"
 if [ ! $GitHubTeamId ]; then
-    printf "Invalid user and/or password\n"
+    printf "Team does not exist\n"
     exit 1
 fi
 
