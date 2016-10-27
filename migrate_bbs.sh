@@ -165,11 +165,11 @@ do
     printf "\n15. OldRepoNewRepoGroupIx\n"
     printf "    curl --insecure --silent \"$KilnApiBaseUrl/Project/$OldRepoPrjIx?token=$KilnApiToken\"\n"
     OldRepoPrjJson=`curl --insecure --silent "$KilnApiBaseUrl/Project/$OldRepoPrjIx?token=$KilnApiToken"`
-    printf "    OldRepoPrjJson | $SCRIPT_DIR/jq \".repoGroups[] | select(.sName==\\\"${OldRepoGrpName}_MigratedToGitHub\\\") | .ixRepoGroup\"\n"
-    OldRepoNewRepoGroupIx=`echo "$OldRepoPrjJson" | $SCRIPT_DIR/jq ".repoGroups[] | select(.sName==\"${OldRepoGrpName}_MigratedToGitHub\") | .ixRepoGroup"`
+    printf "    OldRepoPrjJson | $SCRIPT_DIR/jq \".repoGroups[] | select(.sName==\\\"${OldRepoGrpName}_MigratedToBitbucket\\\") | .ixRepoGroup\"\n"
+    OldRepoNewRepoGroupIx=`echo "$OldRepoPrjJson" | $SCRIPT_DIR/jq ".repoGroups[] | select(.sName==\"${OldRepoGrpName}_MigratedToBitbucket\") | .ixRepoGroup"`
     if [ -z "$OldRepoNewRepoGroupIx" ]; then
-        printf "    curl --insecure --silent \"$KilnApiBaseUrl/RepoGroup/Create\" --request POST --data \"ixProject=$OldRepoPrjIx&sName=${OldRepoGrpName}_MigratedToGitHub&token=$KilnApiToken\"\n"
-        OldRepoNewRepoGroupData=`curl --insecure --silent "$KilnApiBaseUrl/RepoGroup/Create" --request POST --data "ixProject=$OldRepoPrjIx&sName=${OldRepoGrpName}_MigratedToGitHub&token=$KilnApiToken"`
+        printf "    curl --insecure --silent \"$KilnApiBaseUrl/RepoGroup/Create\" --request POST --data \"ixProject=$OldRepoPrjIx&sName=${OldRepoGrpName}_MigratedToBitbucket&token=$KilnApiToken\"\n"
+        OldRepoNewRepoGroupData=`curl --insecure --silent "$KilnApiBaseUrl/RepoGroup/Create" --request POST --data "ixProject=$OldRepoPrjIx&sName=${OldRepoGrpName}_MigratedToBitbucket&token=$KilnApiToken"`
         printf "    OldRepoNewRepoGroupData | $SCRIPT_DIR/jq '.ixRepoGroup': "
         OldRepoNewRepoGroupIx=`echo "$OldRepoNewRepoGroupData" | $SCRIPT_DIR/jq '.ixRepoGroup'`
         if [ -z "$OldRepoNewRepoGroupIx" ]; then
