@@ -10,3 +10,4 @@ echo "    password $GitHubToken" >> ~/.netrc
 export OK_SH_URL=https://api.github.com
 export OK_SH_ACCEPT=application/vnd.github.v3+json
 export OK_SH_JQ_BIN="$SCRIPT_DIR/jq"
+

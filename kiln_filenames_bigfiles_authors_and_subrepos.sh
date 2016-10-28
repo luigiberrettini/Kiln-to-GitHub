@@ -106,8 +106,8 @@ cat $SCRIPT_DIR/bigfiles/hg/kiln_bigfiles*.txt > $SCRIPT_DIR/bigfiles/hg/all_kil
 printf "\n$SCRIPT_DIR/authors/hg/kiln_*.txt | sort | uniq > $SCRIPT_DIR/authors/hg/all_kiln.txt\n"
 cat $SCRIPT_DIR/authors/hg/kiln_*.txt | sort | uniq > $SCRIPT_DIR/authors/hg/all_kiln.txt
 
-printf "\n$SCRIPT_DIR/authors/last-migration/kiln_*.txt | sort | uniq > $SCRIPT_DIR/authors/all_last-migration.txt\n"
-cat $SCRIPT_DIR/authors/last-migration/kiln_*.txt | sort | uniq > $SCRIPT_DIR/authors/all_last-migration.txt
+printf "\n$SCRIPT_DIR/authors/last-migration/kiln_*.txt | sort | uniq > $SCRIPT_DIR/authors/all_kiln_last-migration.txt\n"
+cat $SCRIPT_DIR/authors/last-migration/kiln_*.txt | sort | uniq > $SCRIPT_DIR/authors/all_kiln_last-migration.txt
 
 printf "\nrm -rf $SCRIPT_DIR/authors/last-migration\n"
 rm -rf $SCRIPT_DIR/authors/last-migration
