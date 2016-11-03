@@ -3,7 +3,7 @@
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 OldNewReposCsv=$1
-BitbucketBaseURL=$2
+BitbucketApiBaseURL=$2
 BitbucketProjectName=$3
 BitbucketUser=$4
 BitbucketPassword=$5
@@ -33,8 +33,8 @@ tail -c1 $OldNewReposCsv | read -r _ || echo >> $OldNewReposCsv
 
 
 
-printf "\ncurl --silent --user \"$BitbucketUser:BitbucketPassword\" -H \"X-Atlassian-Token: nocheck\" -H \"Content-Type: application/json\" -X GET \"$BitbucketBaseURL/projects?name=$BitbucketProjectName\" | $SCRIPT_DIR/jq -r '.values | map(select(.name == \"'$BitbucketProjectName'\"))[0].key'\n"
-BitbucketProjectKey=`curl --silent --user "$BitbucketUser:$BitbucketPassword" -H "X-Atlassian-Token: nocheck" -H "Content-Type: application/json" -X GET "$BitbucketBaseURL/projects?name=$BitbucketProjectName" | $SCRIPT_DIR/jq -r '.values | map(select(.name == "'$BitbucketProjectName'"))[0].key'`
+printf "\ncurl --silent --user \"$BitbucketUser:BitbucketPassword\" -H \"X-Atlassian-Token: nocheck\" -H \"Content-Type: application/json\" -X GET \"$BitbucketApiBaseURL/projects?name=$BitbucketProjectName\" | $SCRIPT_DIR/jq -r '.values | map(select(.name == \"'$BitbucketProjectName'\"))[0].key'\n"
+BitbucketProjectKey=`curl --silent --user "$BitbucketUser:$BitbucketPassword" -H "X-Atlassian-Token: nocheck" -H "Content-Type: application/json" -X GET "$BitbucketApiBaseURL/projects?name=$BitbucketProjectName" | $SCRIPT_DIR/jq -r '.values | map(select(.name == "'$BitbucketProjectName'"))[0].key'`
 printf "BitbucketProjectKey: $BitbucketProjectKey"
 if [ ! $BitbucketProjectKey ] || [ "$BitbucketProjectKey" == "null" ]; then
     printf "BitbucketProjectKey not found\n"
@@ -43,8 +43,8 @@ fi
 
 
 
-printf "\ncurl --silent --user \"$BitbucketUser:BitbucketPassword\" -H \"X-Atlassian-Token: nocheck\" -H \"Content-Type: application/json\" -X GET \"$BitbucketBaseURL/groups?filter=$BitbucketTeamName\" | $SCRIPT_DIR/jq '.values | map(select(. == \"'$BitbucketTeamName'\")) | .[]'\n"
-TeamPresent=`curl --silent --user "$BitbucketUser:$BitbucketPassword" -H "X-Atlassian-Token: nocheck" -H "Content-Type: application/json" -X GET "$BitbucketBaseURL/groups?filter=$BitbucketTeamName" | $SCRIPT_DIR/jq '.values | map(select(. == "'$BitbucketTeamName'")) | .[]'`
+printf "\ncurl --silent --user \"$BitbucketUser:BitbucketPassword\" -H \"X-Atlassian-Token: nocheck\" -H \"Content-Type: application/json\" -X GET \"$BitbucketApiBaseURL/groups?filter=$BitbucketTeamName\" | $SCRIPT_DIR/jq '.values | map(select(. == \"'$BitbucketTeamName'\")) | .[]'\n"
+TeamPresent=`curl --silent --user "$BitbucketUser:$BitbucketPassword" -H "X-Atlassian-Token: nocheck" -H "Content-Type: application/json" -X GET "$BitbucketApiBaseURL/groups?filter=$BitbucketTeamName" | $SCRIPT_DIR/jq '.values | map(select(. == "'$BitbucketTeamName'")) | .[]'`
 if [ ! $TeamPresent ]; then
     printf "Team does not exist\n"
     exit 1
@@ -89,8 +89,8 @@ do
     printf "\n01. hg clone --uncompressed ${OldRepoUrl} $SCRIPT_DIR/repos/hg/$OldRepoName\n"
     hg clone --uncompressed ${OldRepoUrl} $SCRIPT_DIR/repos/hg/$OldRepoName
 
-    printf "\n02. curl --silent --user \"$BitbucketUser:BitbucketPassword\" -H \"X-Atlassian-Token: nocheck\" -H \"Content-Type: application/json\" -X PUT \"$BitbucketBaseURL/repos?projectname=$BitbucketProjectName&name=$NewRepoName\" | $SCRIPT_DIR/jq '.values | map(select(.name == \"'$NewRepoName'\"))[0].slug'\n"
-    NewRepoNeedsSuffix=`curl --silent --user "$BitbucketUser:$BitbucketPassword" -H "X-Atlassian-Token: nocheck" -H "Content-Type: application/json" -X PUT "$BitbucketBaseURL/repos?projectname=$BitbucketProjectName&name=$NewRepoName" | $SCRIPT_DIR/jq '.values | map(select(.name == "'$NewRepoName'"))[0].slug'`
+    printf "\n02. curl --silent --user \"$BitbucketUser:BitbucketPassword\" -H \"X-Atlassian-Token: nocheck\" -H \"Content-Type: application/json\" -X PUT \"$BitbucketApiBaseURL/repos?projectname=$BitbucketProjectName&name=$NewRepoName\" | $SCRIPT_DIR/jq '.values | map(select(.name == \"'$NewRepoName'\"))[0].slug'\n"
+    NewRepoNeedsSuffix=`curl --silent --user "$BitbucketUser:$BitbucketPassword" -H "X-Atlassian-Token: nocheck" -H "Content-Type: application/json" -X PUT "$BitbucketApiBaseURL/repos?projectname=$BitbucketProjectName&name=$NewRepoName" | $SCRIPT_DIR/jq '.values | map(select(.name == "'$NewRepoName'"))[0].slug'`
 
     UUID=$(uuidgen -r)
     printf "\n03. if [ $NewRepoNeedsSuffix -ne 0 ]; then NewRepoName=\"${NewRepoName}_${UUID}\"; fi\n"
@@ -138,20 +138,21 @@ do
         printf "to be downloaded from http://github.com/github/gitignore\n"
     fi
 
-    printf "\n11. curl --silent --user \"$BitbucketUser:BitbucketPassword\" -H \"X-Atlassian-Token: nocheck\" -H \"Content-Type: application/json\" -X POST -d \"{ \\\"name\\\": \\\"$NewRepoName\\\", \\\"scmId\\\": \\\"git\\\", \\\"forkable\\\": true }\" \"$BitbucketBaseURL/projects/$BitbucketProjectKey/repos\"\n"
-    curl --silent --user "$BitbucketUser:$BitbucketPassword" -H "X-Atlassian-Token: nocheck" -H "Content-Type: application/json" -X POST -d "{ \"name\": \"$NewRepoName\", \"scmId\": \"git\", \"forkable\": true }" "$BitbucketBaseURL/projects/$BitbucketProjectKey/repos" > /dev/null
+    printf "\n11. curl --silent --user \"$BitbucketUser:BitbucketPassword\" -H \"X-Atlassian-Token: nocheck\" -H \"Content-Type: application/json\" -X POST -d \"{ \\\"name\\\": \\\"$NewRepoName\\\", \\\"scmId\\\": \\\"git\\\", \\\"forkable\\\": true }\" \"$BitbucketApiBaseURL/projects/$BitbucketProjectKey/repos\"\n"
+    curl --silent --user "$BitbucketUser:$BitbucketPassword" -H "X-Atlassian-Token: nocheck" -H "Content-Type: application/json" -X POST -d "{ \"name\": \"$NewRepoName\", \"scmId\": \"git\", \"forkable\": true }" "$BitbucketApiBaseURL/projects/$BitbucketProjectKey/repos" > /dev/null
 
-    printf "\n12. curl --silent --user \"$BitbucketUser:BitbucketPassword\" -H \"X-Atlassian-Token: nocheck\" -H \"Content-Type: application/json\" -X PUT \"$BitbucketBaseURL/repos?projectname=$BitbucketProjectName&name=$NewRepoName\" | $SCRIPT_DIR/jq '.values | map(select(.name == \"'$NewRepoName'\"))[0].slug'\n"
-    NewRepoSlug=`curl --silent --user "$BitbucketUser:$BitbucketPassword" -H "X-Atlassian-Token: nocheck" -H "Content-Type: application/json" -X PUT "$BitbucketBaseURL/repos?projectname=$BitbucketProjectName&name=$NewRepoName" | $SCRIPT_DIR/jq '.values | map(select(.name == "'$NewRepoName'"))[0].slug'`
+    printf "\n12. curl --silent --user \"$BitbucketUser:BitbucketPassword\" -H \"X-Atlassian-Token: nocheck\" -H \"Content-Type: application/json\" -X PUT \"$BitbucketApiBaseURL/repos?projectname=$BitbucketProjectName&name=$NewRepoName\" | $SCRIPT_DIR/jq '.values | map(select(.name == \"'$NewRepoName'\"))[0].slug'\n"
+    NewRepoSlug=`curl --silent --user "$BitbucketUser:$BitbucketPassword" -H "X-Atlassian-Token: nocheck" -H "Content-Type: application/json" -X PUT "$BitbucketApiBaseURL/repos?projectname=$BitbucketProjectName&name=$NewRepoName" | $SCRIPT_DIR/jq '.values | map(select(.name == "'$NewRepoName'"))[0].slug'`
     if [ ! $NewRepoSlug ] || [ "$NewRepoSlug" == "null" ]; then
         printf "New repo was not created\n"
         exit 1
     fi
 
-    printf "\n13. curl --silent --user \"$BitbucketUser:BitbucketPassword\" -H \"X-Atlassian-Token: nocheck\" -H \"Content-Type: application/json\" -X PUT \"$BitbucketBaseURL/projects/$BitbucketProjectKey/repos/$NewRepoSlug/permissions/groups?name=$BitbucketTeamName&permission=REPO_ADMIN\"\n"
-    curl -H "X-Atlassian-Token: nocheck" -H "Content-Type: application/json" -H "Authorization Basic $authCredentials" -X PUT "$BitbucketBaseURL/projects/$BitbucketProjectKey/repos/$NewRepoSlug/permissions/groups?name=$BitbucketTeamName&permission=REPO_ADMIN" > /dev/null
+    printf "\n13. curl --silent --user \"$BitbucketUser:BitbucketPassword\" -H \"X-Atlassian-Token: nocheck\" -H \"Content-Type: application/json\" -X PUT \"$BitbucketApiBaseURL/projects/$BitbucketProjectKey/repos/$NewRepoSlug/permissions/groups?name=$BitbucketTeamName&permission=REPO_ADMIN\"\n"
+    curl -H "X-Atlassian-Token: nocheck" -H "Content-Type: application/json" -H "Authorization Basic $authCredentials" -X PUT "$BitbucketApiBaseURL/projects/$BitbucketProjectKey/repos/$NewRepoSlug/permissions/groups?name=$BitbucketTeamName&permission=REPO_ADMIN" > /dev/null
 
-    RemoteOrigin="$BitbucketBaseURL/scm/$BitbucketProjectKey/${NewRepoName}.git"
+    BitbucketBaseURL=$(echo "$BitbucketApiBaseURL" | sed "s@\([a-z]*://\)\([^/]*\)\(.*\)@\1$BitbucketUser:$BitbucketPassword\@\2@")
+    RemoteOrigin="$BitbucketBaseURL/scm/$BitbucketProjectKey/${NewRepoName}"
     if [ $UseBFG -eq 1 ]; then
         printf "\n14. Migrating binaries to LFS with BFG repo cleaner\n"
         $SCRIPT_DIR/move_large_files_and_apply_ignore.sh $NewRepoName $BFG_ExtensionsToLFS $BFG_FoldersToDelete $BFG_FilesToDelete $RemoteOrigin

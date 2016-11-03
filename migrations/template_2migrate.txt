@@ -1,0 +1,2 @@
+# Values are rows taken from $workDir/kiln_repoList_to_migrate.txt
+OldRepoUrl,OldRepoPrjIx,OldRepoGrpIx,OldRepoIx,OldRepoPrjName,OldRepoGrpName,OldRepoName,NewRepoName
