@@ -1,0 +1,1 @@
+https://kiln.yourcompanyname.com/kiln/Code/KilnProjectName/KilnGroupName/KilnRepoName,KilnProjectId,KilnGroupId,KilnRepoId,KilnProjectName,KilnGroupName,KilnRepoName,GitHubOrBitbucketRepoName
