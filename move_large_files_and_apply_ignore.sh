@@ -41,7 +41,7 @@ fi
 
 if [ ! -f $SCRIPT_DIR/bfg.jar ]; then
     printf "\n---------- Getting BFG repo cleaner\n"
-    wget http://repo1.maven.org/maven2/com/madgag/bfg/1.12.8/bfg-1.12.8.jar -O $SCRIPT_DIR/bfg.jar -o /dev/null
+    wget http://repo1.maven.org/maven2/com/madgag/bfg/1.12.14/bfg-1.12.14.jar -O $SCRIPT_DIR/bfg.jar -o /dev/null
 fi
 
 
