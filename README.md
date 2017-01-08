@@ -1,10 +1,10 @@
-# Kiln-to-GitHub
+# Kiln-to-GitHubCom-or-BitbucketServer
 
 ```shell
 MigrationId='0001'
 GitHubOrBitbucketTeamName='TeamName'
 
-workDir=/gh_mig
+workDir=/git_mig
 cp -pr $workDir/migrations/template_2migrate.txt $workDir/migrations/${MigrationId}_2migrate_${GitHubOrBitbucketTeamName}.txt
 cp -pr $workDir/migrate_with_parameters/template_mwp.sh $workDir/migrations/mwp_${MigrationId}.sh
 chmod +x $workDir/migrate_with_parameters/mwp_*.sh
